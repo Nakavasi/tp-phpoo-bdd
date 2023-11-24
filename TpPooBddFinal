@@ -94,7 +94,7 @@ class Salle {
         $this->largeur=$lar;
     }
 }
-
+//cette class permet de créer les salles pièges
 class Piege extends Salle{
     private $degats;
 
@@ -122,6 +122,7 @@ class Piege extends Salle{
         return $this->degats;
     }
 }
+//cette class permet de créer les salles marchand
 class Marchand extends Salle{
     private $objet;
     private $inventaire;
@@ -147,7 +148,7 @@ class Marchand extends Salle{
     public function getobjet(){
         return $this->objet;
     }
-
+    //cette fonction permet de faire apparaitre le marchand
     public function Lancement($Personnage,$inventaire,$objets) {
         apparaitreprogressivement("Vous avez trouvé un marchand !\n", 30000);
         sleep(2);
@@ -234,7 +235,7 @@ class Marchand extends Salle{
     }
 
 }
-
+//cette class permet de créer les salles repos et de récupérer toute la vie du personnage
 class Repos extends Salle{
     private $camps;
 
@@ -254,7 +255,7 @@ class Repos extends Salle{
         sleep(1);
     }
 }
-
+//cette class permet de créer les salles monstres
 Class SalleMonstre extends Salle{
     private $enemies;
 
@@ -273,7 +274,7 @@ Class SalleMonstre extends Salle{
         combat($personnage, $randomEnemy);
     }
 }
-
+//cette class permet de créer les salles coffres
 class Coffre extends Salle{
     private $objets;
 
@@ -283,7 +284,7 @@ class Coffre extends Salle{
     }
 
     // Methode pour ouvrir un coffre	
-    public function ouvrirCoffre($personnage) {
+    public function Lancement($personnage) {
         apparaitreprogressivement("Vous trouvez un coffre dans la salle.\n", 30000);
         apparaitreprogressivement("Voulez-vous l'ouvrir ? (1-oui / 2-non)\n", 10000);
 
@@ -302,8 +303,8 @@ class Coffre extends Salle{
                 // Ca permet de récupérer un objet aléatoire dans la liste des objets
                 $nouvelObjet = $this->objets[array_rand($this->objets)];
                 
-                $requete = chargementBase()->prepare("UPDATE inventaire_personnage (id_personnage, nom_objet) VALUES (?, ?)");
-                $requete->execute([$personnage->getId(), $nouvelObjet->getnom()]);
+                $requete = chargementBase()->prepare("UPDATE nom (ID, nom) VALUES (?, ?)");
+                $requete->execute([$personnage["ID"], $nouvelObjet["nom"]]);
 
                 // Ca permet de récupérer les statistiques de l'objet
                 apparaitreprogressivement("Vous avez trouvé un nouvel objet : " . $nouvelObjet->getnom() . "\n", 30000);
@@ -450,45 +451,49 @@ class Objets{
         return $this->statistique;
     }
 }
+//cette commande permet de faire apparaitre le texte progressivement
 function apparaitreprogressivement($texte,$temps){
     for ($i = 0; $i < strlen($texte); $i++) {
         echo $texte[$i];
         usleep($temps);
     }
 }
-
+//cette commande permet calculer les dégats des monstre
 function MonstreAttaque($monstre, $personnage) {
     $degat=$monstre->getPA();
     $defence=$personnage["PD"];
     $personnage["PV"]= $personnage["PV"]- round($degat/(round($defence/10)+1));
-    apparaitreprogressivement($monstre->getnom()." vous attaque et vous subissez ".round($degat/round($defence/10)+1)." de dégats.\n",30000);
+    apparaitreprogressivement($monstre->getnom()." vous attaque et vous subissez ".round($degat/(round($defence/10)+1))." de dégats.\n",3000);
     sleep(1);
+    return $personnage["PV"];
 } 
+//cette commande permet de calculer les dégats du personnage
 function PersonnageAttaque($Personnage, $monstre) {
     $degat=$Personnage["PA"];
     $defence=$monstre->getPD();
     $monstre->prendredegats(round($degat/(round($defence/10)+1)));
-    apparaitreprogressivement("Vous attaquez et vous infligez ".round($degat/(round($defence/10) +1))." de dégats.\n",30000);
+    apparaitreprogressivement("Vous attaquez et vous infligez ".round($degat/(round($defence/10)+1))." de dégats.\n",30000);
     sleep(1);
 }
-
+//cette commande permet de faire apparaitre les statistiques du monstre
 function afficherStatsmonstre($monstre){
     apparaitreprogressivement("Voici les statistique de :". $monstre->getnom() ."\n",30000);
     apparaitreprogressivement("PV :". $monstre->getPV() ."/". $monstre->getPVMax() ."\n",10000);
     apparaitreprogressivement("Attaque :". $monstre->getPA() ."\n",10000);
     apparaitreprogressivement("Defence :". $monstre->getPD() ."\n",10000);
 }
-
+//cette commande permet de faire apparaitre les statistiques du personnage
 function afficherStatsPersonnage($Personnage){
     apparaitreprogressivement("Voici les statistique de :". $Personnage["nom"] ."\n",30000);
     apparaitreprogressivement("PV :". $Personnage["PV"] ."/". $Personnage["PVMAX"] ."\n",10000);
     apparaitreprogressivement("Attaque :". $Personnage["PA"] ."\n",10000);
     apparaitreprogressivement("Defence :". $Personnage["PD"] ."\n",10000);
 }
-
+//cette commande permet de lancer le combat
 function combat($Personnage, $Ennemie){
     apparaitreprogressivement("Vous entrez en combat.\n", 30000);
     sleep(2);
+    // Boucle de combat
     while(true){
         popen('cls','w');
         $sedefend=false;
@@ -502,18 +507,21 @@ function combat($Personnage, $Ennemie){
         $choix = readline();
         popen('cls','w');
         $choixEnemy= random_int(1,10);
+        // Choix aléatoire de l'ennemi
         if($choix==2){
             $Personnage["PD"]= $Personnage["PD"] *2;
             $sedefend=true;
             apparaitreprogressivement("Vous vous défendez !\n", 30000);
             sleep(1);
         }
+        // Choix aléatoire de l'ennemi si il attaque defend ou ne fait rien
         if($choixEnemy>4 && $choixEnemy<=8){
             $Ennemie->seDefend();
             $sedefendEnemy=true;
             apparaitreprogressivement("L'ennemi se défend.\n",30000);
             sleep(1);
         }
+        // Choix du joueur
         if ($choix == 1) {
             PersonnageAttaque($Personnage, $Ennemie);
         }
@@ -521,19 +529,20 @@ function combat($Personnage, $Ennemie){
             apparaitreprogressivement("vous n'arrivez pas à choisir, vous passez donc votre tour.\n", 30000);
             sleep(1);
         }
+        // Choix de l'ennemi
         if($choixEnemy<=4){
-            MonstreAttaque($Ennemie,$Personnage);
+            $Personnage["PV"]=MonstreAttaque($Ennemie,$Personnage);
         }
         else if($choixEnemy>8){
             apparaitreprogressivement("Le monstre vous regarde fixement.",30000);
             sleep(1);
         }
-    
+        // Vérification de la vie du personnage et du monstre
         if ($Personnage["PV"] <= 0) {
             apparaitreprogressivement("Vous avez été vaincu !\n", 30000);
             die();
         } elseif ($Ennemie->getPV() <= 0) {
-            apparaitreprogressivement("Vous avez vaincu le monstre !\n", 30000);
+            apparaitreprogressivement("Vous avez vaincu le monstre !\n Vous gagné ".$Ennemie->getXPgagner()." expèrience et 50 Gold.", 30000);
             $Personnage["Exp"]= $Personnage["Exp"] + $Ennemie->getXPgagner();
             if ($Personnage["Exp"] >= $Personnage["Niveau"]*100){
                 Monterniveau($Personnage);
@@ -549,7 +558,7 @@ function combat($Personnage, $Ennemie){
         }
     }
 }
-
+//cette fonction permet de crée les salles
 function ApparitionSalle($Salle,$numero){
     $long=$Salle->getlongeur();
     $lar=$Salle->getlargeur();
@@ -562,6 +571,7 @@ function ApparitionSalle($Salle,$numero){
     }
     apparaitreprogressivement(str_repeat("=",$long)."\n",5000);
 }
+//cette fonction permet de monter de niveau
 function Monterniveau($Personnage){
     apparaitreprogressivement("Vous montez de niveau, vous pouvez donc mettre 3 points de stats.\n",30000);
     $Personnage["Exp"]= $Personnage["Exp"] - $Personnage["Niveau"]*100;
@@ -569,6 +579,7 @@ function Monterniveau($Personnage){
     sleep(2);
     popen('cls','w');
     $PointsStats=5;
+    //boucle pour mettre les points de stats
     while($PointsStats!=0){
         popen('cls','w');
         apparaitreprogressivement("Point de stats restant :".$PointsStats."\n",30000);
@@ -577,6 +588,7 @@ function Monterniveau($Personnage){
         apparaitreprogressivement("3-Points deffence:". $Personnage["PD"] ." +1\n",10000);
         apparaitreprogressivement("Choix :",30000);
         $choix=readline();
+        //choix du joueur
         if($choix==1){
             $PointsStats= $PointsStats-1;
             $Personnage["PVMAX"]= $Personnage["PVMAX"]+10;
@@ -602,11 +614,12 @@ function Monterniveau($Personnage){
         }
     }
 }
+//cette fonction permet de sauvegarder la partie
 function Sauvegarde($Personnage){
     $requete = chargementBase()->prepare("UPDATE sauvegarde SET PV =?, PVMAX =?, PA =?, PD =?, Niveau =?, Exp =?, Salle =?, Argent= ? WHERE ID= ?");
     $requete->execute([$Personnage["PV"],$Personnage["PVMAX"],$Personnage["PA"],$Personnage["PD"],$Personnage->getlevel(), $Personnage->getexperience(),$Personnage->getSalle(),$Personnage["Argent"],$Personnage["ID"]]);
 }
-
+//cette fonction peremt de faire un choix apres avoir fini une salle
 function finSalle($Personnage){
     while(true){
         popen('cls','w');
@@ -649,7 +662,7 @@ function finSalle($Personnage){
         }
     }
 }
-
+//cette fonction permet de jeter un item
 function jeterItem($inventaire){
     apparaitreprogressivement("Quel item souhaitez-vous jeter ?\n",30000);
     listerInventaire($inventaire);
@@ -666,7 +679,7 @@ function jeterItem($inventaire){
         }
     }
 }
-
+//cette fonction permet de lister l'inventaire
 function listerInventaire($inventaire){
     apparaitreprogressivement("Votre inventaire contient actuellement :\n",30000);
     foreach($inventaire as $item){
@@ -675,7 +688,7 @@ function listerInventaire($inventaire){
 }
 //ces lignes de codes permettent de créer les objets, les monstres et les salles
 $Objets=[new Objets("épée en fer", "arme", ["dégats"=>6]), new Objets("masse d'arme", "arme", ["dégats"=>9]), new Objets("lance d'os", "arme", ["dégats"=>12]), new Objets("espadon", "arme", ["dégats"=>18]), new Objets("baton", "arme", ["dégats"=>900]), new Objets("halbarde", "arme", ["dégats"=>20]), new Objets("hache à deux mains", "arme", ["dégats"=>25]), new Objets("lame divin des dieux", "arme", ["dégats"=>1]), new Objets("faussoyeur des mondes", "arme", ["dégats"=>50]), new Objets("trinitées", "arme", ["dégats"=>40]), new Objets("brise coque", "arme", ["dégats"=>60]), new Objets("dague du roi déchue", "arme", ["dégats"=>55])];
-$Ennemies=[new monstre("squelette", 90, 15, 5, 20,[]), new monstre("zombie", 120, 15, 8, 25,[]), new monstre("gobelin slayer", 70, 30, 10, 50,[]), new monstre("orc", 160, 50, 20, 100,[]), new monstre("démon", 200, 60, 30, 300,[])];
+$Ennemies=[new monstre("squelette", 90, 8, 5, 20,[]), new monstre("zombie", 120, 15, 8, 25,[]), new monstre("gobelin slayer", 70, 30, 10, 50,[]), new monstre("orc", 160, 50, 20, 100,[]), new monstre("démon", 200, 60, 30, 300,[])];
 $Enemiesspeciaux=[new MonstreSpécial("Mimic",250,25,50,2500,["épée en obsidienne à deux mains",50,20],"langue",["Glouton",1.5]), new MonstreSpécial("Dragon",500,100,100,5000,["Espadon des dieux",90,18],"Lance-flammes",["Souffle de feu",2]), new MonstreSpécial("Golem",1000,200,200,10000,["Marteau de guerre",150,30],"Poing de pierre",["Poing de pierre",3])];
 $SallesMonstre= [new SalleMonstre("Monstre",20,12,$Ennemies),new SalleMonstre("Monstre",16,18,$Ennemies)];
 $SalleCoffre= [new Coffre("Coffre",26,12,$Objets),new Coffre("Coffre",22,11,$Objets)];
@@ -739,18 +752,22 @@ while(true){
                     else if($typeSalle==16){
                         $PositionSalle=$SallesMarchand[random_int(0,count($SallesMonstre)-1)];
                         $PositionSalle->Lancement($Personnage,$InvtairePerso,$objects);
+                        finSalle($Personnage);
                     }
                     else if($typeSalle==17){
                         $PositionSalle=$SallesPiege[random_int(0,count($SallesMonstre)-1)];
                         $PositionSalle->Lancement($Personnage);
+                        finSalle($Personnage);
                     }
                     else if($typeSalle==18){
                         $PositionSalle=$SalleCoffre[random_int(0,count($SallesMonstre)-1)];
                         $PositionSalle->Lancement($Personnage);
+                        finSalle($Personnage);
                     }
                     else if($typeSalle>18){
-                        $PositionSalle=$SallesRepos=[random_int(0,count($SallesMonstre)-1)];
+                        $PositionSalle=$SallesRepos[random_int(0,count($SallesMonstre)-1)];
                         $PositionSalle->Lancement($Personnage);
+                        finSalle($Personnage);
                     }
                 }
             }
@@ -775,7 +792,8 @@ while(true){
         }
         apparaitreprogressivement("Choix :",30000);
         $choixsauvegarde=readline();
-        popen('cls','w'); 
+        popen('cls','w');
+        //on vérifie si la sauvegarde existe
         if ($choixsauvegarde==1 || $choixsauvegarde==2 || $choixsauvegarde==3){
             apparaitreprogressivement("Lancement d'une nouvelle partie sur la sauvegarde ".$choixsauvegarde.". \n",30000);
             sleep(2);
